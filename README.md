@@ -9,7 +9,7 @@
 - 📝 **Auto-Logging:** Intelligently saves discoveries to `scan_<target>.txt`.
 
 ## Help Menu
-```text
+```
 usage: DBF3000.py [-h] [-u URL] [-l LIST] [-w WORKERS] [-v] [-f FIND] [-o OUTPUT]
 
 DBF3000: The Directory Brute Forcer (Pro Edition)
@@ -26,15 +26,21 @@ options:
                         Output file (Default: scan_<domain>.txt)
 
 ## Usage
-```bash
+
 # Interactive Mode (Prompts for target)
+```
+```
 ./DBF3000.py
-
+```
 # Standard Scan
+```
 ./DBF3000.py -u [https://example.com](https://example.com)
-
+```
 # Turbo Scan (100 workers, Custom Wordlist)
+```
 ./DBF3000.py -u [https://example.com](https://example.com) -w 100 -l /path/to/wordlist.txt
-
+```
 # Sniper Mode (Check one specific file)
+```
 ./DBF3000.py -u [https://example.com](https://example.com) -f admin/login.php
+```
