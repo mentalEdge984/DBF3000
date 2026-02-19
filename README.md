@@ -28,9 +28,7 @@ options:
 ## Usage
 
 # Interactive Mode (Prompts for target)
-```
-```
-./DBF3000.py
+```./DBF3000.py
 ```
 # Standard Scan
 ```
