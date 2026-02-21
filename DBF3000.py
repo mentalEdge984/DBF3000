@@ -86,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--workers", type=int, default=50, help="Number of workers")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")
     parser.add_argument("-f", "--find", help="Specific path to check (Sniper Mode)")
-    parser.add_argument("-o", "--output", help="Output file (Default: scan_<domain>.txt)")
+    parser.add_argument("-o", "--output", help="Output file or full path (Default: Auto-saves to Desktop)")
 
     args = parser.parse_args()
 
@@ -128,7 +128,6 @@ if __name__ == "__main__":
             sys.exit()
 
     # --- CONFIGURE CONNECTION POOLING ---
-    # We dynamically size the connection pool to match the exact number of workers requested
     adapter = HTTPAdapter(pool_connections=args.workers, pool_maxsize=args.workers)
     session.mount('http://', adapter)
     session.mount('https://', adapter)
@@ -148,13 +147,31 @@ if __name__ == "__main__":
     else:
         base_url = args.url.rstrip('/')
 
-    # --- SMART AUTO-NAMING ---
+    # --- SMART AUTO-NAMING & ROUTING ---
+    home_dir = os.path.expanduser('~')
+    desktop_path = os.path.join(home_dir, 'Desktop')
+
     if args.output:
-        LOG_FILE = args.output
+        # Check if they provided just a filename, or a specific path
+        if os.path.dirname(args.output) == "":
+            # Only a filename was given (e.g. "results.txt") -> Send to Desktop
+            if os.path.exists(desktop_path):
+                LOG_FILE = os.path.join(desktop_path, args.output)
+            else:
+                LOG_FILE = args.output
+        else:
+            # A specific path was given (e.g. "/tmp/results.txt") -> Respect it
+            LOG_FILE = args.output
     else:
+        # No flag was used -> Auto-generate name and send to Desktop
         clean_name = base_url.replace("http://", "").replace("https://", "").split('/')[0]
         clean_name = clean_name.replace(":", "_")
-        LOG_FILE = f"scan_{clean_name}.txt"
+        auto_name = f"scan_{clean_name}.txt"
+        
+        if os.path.exists(desktop_path):
+            LOG_FILE = os.path.join(desktop_path, auto_name)
+        else:
+            LOG_FILE = auto_name
 
     VERBOSE_MODE = args.verbose
 
@@ -189,19 +206,3 @@ if __name__ == "__main__":
             print(f"[*] Loaded {len(urls_to_scan)} paths.")
         except FileNotFoundError:
             print(f"[X] ERROR: Wordlist not found at {args.list}")
-            sys.exit()
-
-    print(f"[*] Starting scan with {args.workers} workers...")
-    print("-" * 60)
-
-    # 3. Launch Workers
-    try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
-            executor.map(check_url, urls_to_scan)
-            
-        print("-" * 60)
-        print(f"[#] Scan Complete. Report saved to {LOG_FILE}")
-        
-    except KeyboardInterrupt:
-        print("\n[!] Scan aborted by user.")
-        sys.exit()
